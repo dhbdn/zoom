@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="Author" content="Bump">
+    <title>淘宝放大镜效果</title>
+    <style>
+        *{ margin: 0; padding: 0; font-family:Microsoft yahei,serif;}
+        li{ list-style:none;}
+        #box{
+            width:400px;
+            height: 480px;
+            margin:50px auto;
+            border:1px solid red;
+        }
+        #wrap{
+            position: relative;
+            width:100%;
+            height:100%;
+        }
+        #wrap .l-top{
+            position: relative;
+            width:400px;
+            height:400px;
+            background:#ddd;
+        }
+        #wrap .l-top .view{
+            overflow: hidden;
+            position: absolute;
+            top:0;
+            left:0;
+            bottom:0;
+            right:0;
+            margin:auto;
+        }
+        #wrap .l-top .view img{
+            width:100%;
+            height:100%;
+        }
+        #wrap .l-top .view .mask{
+            /*display: none;*/
+            position: absolute;
+            top:0;
+            left:0;
+            z-index:100;
+            width:150px;
+            height:150px;
+            background: url("img/cover.png");
+            cursor: move;
+        }
+        #wrap .right{
+            overflow: hidden;
+            display: none;
+            position: absolute;
+            top:0;
+            right:-400px;
+            width:400px;
+            height:400px;
+        }
+        #box .tab ul{
+            width:100%;
+            height:80px;
+        }
+        #box .tab ul li{
+            position:relative;
+            float:left;
+            width:50px;
+            height:50px;
+            margin:15px 12px;
+            background: #ddd;
+            border:3px solid transparent;
+            cursor: pointer;
+        }
+        #box .tab ul li.on{
+            border:3px solid #f60;
+        }
+        #box .tab ul li img{
+            position: absolute;
+            top:0;
+            left:0;
+            bottom:0;
+            right:0;
+            margin:auto;
+        }
+    </style>
+</head>
+<body>
+<div id="box">
+    <div id="wrap">
+        <div class="l-top">
+            <div class="view">
+                <img src="" alt="">
+                <!--<img src="img/2.jpg" alt="">-->
+                <!--<img src="img/3.jpg" alt="">-->
+                <!--<img src="img/4.jpg" alt="">-->
+                <!--<img src="img/5.jpg" alt="">-->
+                <div class="mask"></div>
+            </div>
+        </div>
+        <div class="tab">
+            <ul>
+                <li><img src="img/1.png" alt=""></li>
+                <li><img src="img/2.png" alt=""></li>
+                <li><img src="img/3.png" alt=""></li>
+                <li><img src="img/4.png" alt=""></li>
+            </ul>
+        </div>
+        <div class="right"></div>
+    </div>
+</div>
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script>
+    (function () {
+        //获取：
+        var $wrap = $('#wrap'),
+            $tli = $wrap.find('.tab ul li'),
+            tW = $tli.width(),
+            length = $tli.length,
+            $ltop = $wrap.find('.l-top'),
+            lW = $ltop.width(),
+            lH = $ltop.height(),
+            $view = $ltop.find('.view'),
+            $vImg = $view.find('img'),
+            $right = $wrap.find('.right'),
+            arr = [];
+            //设置小图样式：
+        $tli.each(function (i) {
+            var $img = $(this).find('img'),
+                width = $img.width();
+            width?load.call($img[0]):($img[0].onload = load);
+            function load() {
+                var width = $(this).width(),
+                    height = $(this).height();
+                arr[i]  = width/height;
+                this[width>height?'width':'height'] = tW;
+                for (var j = 0; j < length; j++) if (!arr[j])return;
+                afterload();
+            }
+        });
+        function afterload() {
+            //移入事件：
+            $tli.mouseenter(enter.call($tli[0]));
+            function enter() {
+                var pro = arr[$(this).index()];
+                $view.width(pro>1?lW:lW*pro);
+                $view.height(pro>1?lH/pro:lH);
+                $vImg.prop('src',$(this).find('img').prop('src'));
+                return enter;
+            }
+            //mask移动:
+            $ltop.hover(function () {
+                $vImg.show();
+                $right.show();
+                var $mask = $view.find('.mask'),
+                    mW = $mask.width(),
+                    mH = $mask.height(),
+                    vW = $view.width(),
+                    vH = $view.height(),
+                    rW = $right.width(),
+                    rH = $right.height();
+//                    topMax = Math.max(0,vH-mH),
+//                    leftMax = Math.max(0,vW-mW);
+                $(this).mousemove(function (e) {
+                    var x = e.pageX - $view.offset().left,
+                        y = e.pageY - $view.offset().top;
+                    var mX = x -  mW/2,
+                        mY = y - mH/2;
+//                    var mX = e.pageX - $view.offset().left - mW/2,
+//                        mY = e.pageY - $view.offset().top - mH/2;
+                    mX = Math.min(vW-mW,mX);
+                    mX = Math.max(0,mX);
+                    mY = Math.min(vH-mH,mY);
+                    mY = Math.max(0,mY);
+                    $mask.css({
+                        left:mX,
+                        top:mY
+                    });
+                    $right.css({
+                        //backgroundImage:"url("+$Img.prop('src')+")",
+                        backgroundImage:'url('+$vImg.prop('src')+')',
+                        backgroundRepeat:'no-repeat',
+                        backgroundSize:rW*vW/mW+'px '+rH*vH/mH+'px',
+                        backgroundPosition: -mX*rW/mW+'px '+-mY*rH/mH+'px'
+                    })
+                })
+            },function () {
+                $(this).off('mousemove');
+                $vImg.hide();
+                $right.hide();
+            })
+        }
+    })();
+</script>
+</body>
+</html>
